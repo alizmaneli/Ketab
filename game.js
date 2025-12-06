@@ -1,7 +1,7 @@
 let inputMode = "keyboard";
 let canvas, ctx;
 let player = { x: 400, y: 300, speed: 3 };
-let target = null; // مقصد برای حرکت
+let target = null;
 let keys = {};
 let lastTime = 0;
 
@@ -17,7 +17,6 @@ function startGame(mode) {
   window.addEventListener("resize", resizeCanvas);
 
   setupInput();
-
   requestAnimationFrame(gameLoop);
 }
 
@@ -26,9 +25,8 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
-// ورودی‌ها
 function setupInput() {
-  // کیبورد – همیشه فعال
+  // کیبورد
   document.addEventListener("keydown", e => {
     keys[e.key.toLowerCase()] = true;
   });
@@ -36,7 +34,7 @@ function setupInput() {
     keys[e.key.toLowerCase()] = false;
   });
 
-  // کلیک موس → حرکت به همون نقطه
+  // کلیک موس = حرکت به آن نقطه
   canvas.addEventListener("mousedown", e => {
     const rect = canvas.getBoundingClientRect();
     target = {
@@ -45,21 +43,23 @@ function setupInput() {
     };
   });
 
-  // تاچ → فقط روی touchend مقصد رو تنظیم می‌کنیم (احساس "تپ" ساده)
-  canvas.addEventListener("touchend", e => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const t = e.changedTouches[0];
-    if (!t) return;
-
-    target = {
-      x: t.clientX - rect.left,
-      y: t.clientY - rect.top
-    };
-  }, { passive: false });
+  // تاچ = تپ به نقطه مقصد
+  canvas.addEventListener(
+    "touchend",
+    e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const t = e.changedTouches[0];
+      if (!t) return;
+      target = {
+        x: t.clientX - rect.left,
+        y: t.clientY - rect.top
+      };
+    },
+    { passive: false }
+  );
 }
 
-// حلقه بازی
 function gameLoop(ts) {
   const dt = (ts - lastTime) / 16.67;
   lastTime = ts;
@@ -71,25 +71,25 @@ function gameLoop(ts) {
 }
 
 function update(dt) {
-  let vx = 0, vy = 0;
+  let vx = 0,
+    vy = 0;
 
-  // کنترل با کیبورد
+  // کیبورد
   if (keys["w"] || keys["arrowup"]) vy -= 1;
   if (keys["s"] || keys["arrowdown"]) vy += 1;
   if (keys["a"] || keys["arrowleft"]) vx -= 1;
   if (keys["d"] || keys["arrowright"]) vx += 1;
 
-  // اگر کیبورد استفاده نمی‌شه و target داریم → به سمت هدف برو
+  // اگر کیبورد استفاده نشه و target داریم → حرکت به سمت target
   if (vx === 0 && vy === 0 && target) {
     const dx = target.x - player.x;
     const dy = target.y - player.y;
     const dist = Math.hypot(dx, dy);
-
     if (dist > 2) {
       vx = dx / dist;
       vy = dy / dist;
     } else {
-      target = null; // رسیدیم
+      target = null;
     }
   }
 
@@ -100,32 +100,43 @@ function update(dt) {
   player.x += vx * player.speed * dt;
   player.y += vy * player.speed * dt;
 
-  // محدودیت داخل صفحه
   player.x = Math.max(0, Math.min(canvas.width, player.x));
   player.y = Math.max(0, Math.min(canvas.height, player.y));
 }
 
-// رسم صحنه + چراغ‌قوه
 function draw() {
-  // پس‌زمینه کاملاً سیاه
+  // پس‌زمینه کاملاً مشکی
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // چراغ‌قوه اطراف قهرمان (دایره روشن روی پس‌زمینه سیاه)
-  const r = 260; // شعاع نور
+  // شعاع نور
+  const r = 260;
+
+  // یک دایره نور واضح دور قهرمان
   const g = ctx.createRadialGradient(
-    player.x, player.y, 0,
-    player.x, player.y, r
+    player.x,
+    player.y,
+    0,
+    player.x,
+    player.y,
+    r
   );
-  g.addColorStop(0, "rgba(255,255,255,0.9)");
-  g.addColorStop(0.4, "rgba(255,255,255,0.2)");
+  g.addColorStop(0, "rgba(255,255,255,0.95)");
+  g.addColorStop(0.4, "rgba(255,255,255,0.4)");
   g.addColorStop(1, "rgba(0,0,0,0)");
 
+  // فقط داخل یک دایره می‌کشیم که نور کاملاً مشخص دیده بشه
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, r, 0, Math.PI * 2);
+  ctx.closePath();
   ctx.fillStyle = g;
-  ctx.fillRect(player.x - r, player.y - r, r * 2, r * 2);
+  ctx.fill();
+  ctx.restore();
 
-  // دیوارهای تونل را داخل همین نور با رنگ کمی روشن‌تر می‌کشیم
-  ctx.strokeStyle = "rgba(80,80,80,0.8)";
+  // خطوط تونل داخل نور
+  ctx.save();
+  ctx.strokeStyle = "rgba(120,120,120,0.9)";
   ctx.lineWidth = 4;
 
   // سقف
@@ -152,7 +163,9 @@ function draw() {
   ctx.lineTo(canvas.width * 0.9, canvas.height);
   ctx.stroke();
 
-  // قهرمان (نقطه سبز)
+  ctx.restore();
+
+  // قهرمان (نقطه سبز وسط نور)
   ctx.fillStyle = "#0f0";
   ctx.beginPath();
   ctx.arc(player.x, player.y, 6, 0, Math.PI * 2);
@@ -162,7 +175,7 @@ function draw() {
   ctx.fillStyle = "#fff";
   ctx.font = "14px sans-serif";
   ctx.fillText(
-    "کیبورد: W A S D یا جهت‌ها   |   تاچ/کلیک: روی نقطه‌ای که می‌خوای برو لمس کن/کلیک کن",
+    "کیبورد: W A S D یا جهت‌ها   |   تاچ/کلیک: روی هر نقطه تپ کن تا قهرمان به سمتش حرکت کند",
     20,
     30
   );
