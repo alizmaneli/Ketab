@@ -109,10 +109,10 @@ function draw() {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // شعاع نور
+  // شعاع نور چراغ‌قوه
   const r = 260;
 
-  // یک دایره نور واضح دور قهرمان
+  // نور کمی گرم‌تر (مثل چراغ دستی واقعی)
   const g = ctx.createRadialGradient(
     player.x,
     player.y,
@@ -121,11 +121,11 @@ function draw() {
     player.y,
     r
   );
-  g.addColorStop(0, "rgba(255,255,255,0.95)");
-  g.addColorStop(0.4, "rgba(255,255,255,0.4)");
+  g.addColorStop(0, "rgba(255,245,220,0.95)");
+  g.addColorStop(0.4, "rgba(255,245,220,0.35)");
   g.addColorStop(1, "rgba(0,0,0,0)");
 
-  // فقط داخل یک دایره می‌کشیم که نور کاملاً مشخص دیده بشه
+  // دایره نور
   ctx.save();
   ctx.beginPath();
   ctx.arc(player.x, player.y, r, 0, Math.PI * 2);
@@ -134,34 +134,64 @@ function draw() {
   ctx.fill();
   ctx.restore();
 
-  // خطوط تونل داخل نور
+  // حالا داخل همین صحنه، تونل مترو با پرسپکتیو ساده
   ctx.save();
+  ctx.strokeStyle = "rgba(160,160,160,0.9)";
+  ctx.lineWidth = 3;
+
+  const midX = canvas.width / 2;
+  const floorY = canvas.height * 0.8;
+  const ceilY = canvas.height * 0.2;
+
+  // دیوارهای چپ و راست که به نقطه گریز می‌رن
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.05, floorY);
+  ctx.lineTo(midX - canvas.width * 0.08, canvas.height * 0.45);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.95, floorY);
+  ctx.lineTo(midX + canvas.width * 0.08, canvas.height * 0.45);
+  ctx.stroke();
+
+  // سقف مترو
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.1, ceilY);
+  ctx.lineTo(canvas.width * 0.9, ceilY);
+  ctx.stroke();
+
+  // کف مترو (لبه سکوی ایستگاه)
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.05, floorY);
+  ctx.lineTo(canvas.width * 0.95, floorY);
+  ctx.stroke();
+
+  // ریل‌های قطار با پرسپکتیو
   ctx.strokeStyle = "rgba(120,120,120,0.9)";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 2;
 
-  // سقف
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.2);
-  ctx.lineTo(canvas.width, canvas.height * 0.2);
+  ctx.moveTo(canvas.width * 0.25, floorY);
+  ctx.lineTo(midX - canvas.width * 0.03, canvas.height * 0.65);
   ctx.stroke();
 
-  // کف
   ctx.beginPath();
-  ctx.moveTo(0, canvas.height * 0.8);
-  ctx.lineTo(canvas.width, canvas.height * 0.8);
+  ctx.moveTo(canvas.width * 0.75, floorY);
+  ctx.lineTo(midX + canvas.width * 0.03, canvas.height * 0.65);
   ctx.stroke();
 
-  // ستون چپ
-  ctx.beginPath();
-  ctx.moveTo(canvas.width * 0.1, 0);
-  ctx.lineTo(canvas.width * 0.1, canvas.height);
-  ctx.stroke();
+  // تیرک‌های عمودی فاصله‌دار (مانند ستون‌های مترو)
+  const colCount = 5;
+  for (let i = 0; i <= colCount; i++) {
+    const t = i / colCount;
+    const xBottom = canvas.width * 0.1 + (canvas.width * 0.8) * t;
+    const xTop = midX + (xBottom - midX) * 0.4;
 
-  // ستون راست
-  ctx.beginPath();
-  ctx.moveTo(canvas.width * 0.9, 0);
-  ctx.lineTo(canvas.width * 0.9, canvas.height);
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(xBottom, floorY);
+    ctx.lineTo(xTop, ceilY);
+    ctx.stroke();
+  }
 
   ctx.restore();
 
