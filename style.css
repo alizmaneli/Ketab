@@ -28,3 +28,7 @@ button {
 button:hover {
   background:#444;
 }
+canvas {
+  display: block;
+  touch-action: none; /* برای این‌که سافاری صفحه رو اسکرول نکنه */
+}
