@@ -23,7 +23,7 @@ function startGame(mode) {
   setupInput();
 
   // لود تصویر پس‌زمینه
-  bgImg.src = "assets/images/F318E535-88FD-4E70-A1E8-0BE5BC7C90E8.png"; // اگر اسم دیگری گذاشتی همین‌جا عوض کن
+  bgImg.src = "assets/images/F318E535-88FD-4E70-A1E8-D8E5BC7C90E8.png"; // اگر اسم دیگری گذاشتی همین‌جا عوض کن
   bgImg.onload = () => {
     bgReady = true;
   };
