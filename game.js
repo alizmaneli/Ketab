@@ -162,3 +162,5 @@ function draw() {
     30
   );
 }
+  ctx.fillStyle = "#ff4444";
+  ctx.fillText("BG: " + (bgReady ? "OK" : "NOT LOADED"), 20, 50);
