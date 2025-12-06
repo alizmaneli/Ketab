@@ -107,47 +107,62 @@ function update(dt) {
 
 // رسم صحنه + چراغ‌قوه
 function draw() {
-  // پس‌زمینه تونل ساده
-  ctx.fillStyle = "#111";
+  // پس‌زمینه کاملاً سیاه
+  ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  ctx.fillStyle = "#222";
-  ctx.fillRect(0, canvas.height * 0.2, canvas.width, 10);
-  ctx.fillRect(0, canvas.height * 0.8, canvas.width, 10);
-  ctx.fillRect(canvas.width * 0.1, 0, 10, canvas.height);
-  ctx.fillRect(canvas.width * 0.9, 0, 10, canvas.height);
-
-  // تاریکی
-  ctx.fillStyle = "rgba(0,0,0,0.97)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // چراغ‌قوه
+  // چراغ‌قوه اطراف قهرمان (دایره روشن روی پس‌زمینه سیاه)
+  const r = 260; // شعاع نور
   const g = ctx.createRadialGradient(
     player.x, player.y, 0,
-    player.x, player.y, 180
+    player.x, player.y, r
   );
-  g.addColorStop(0, "rgba(255,255,255,1)");
-  g.addColorStop(0.3, "rgba(255,255,255,0.4)");
+  g.addColorStop(0, "rgba(255,255,255,0.9)");
+  g.addColorStop(0.4, "rgba(255,255,255,0.2)");
   g.addColorStop(1, "rgba(0,0,0,0)");
 
-  ctx.globalCompositeOperation = "destination-out";
   ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, 200, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.globalCompositeOperation = "source-over";
+  ctx.fillRect(player.x - r, player.y - r, r * 2, r * 2);
 
-  // قهرمان
+  // دیوارهای تونل را داخل همین نور با رنگ کمی روشن‌تر می‌کشیم
+  ctx.strokeStyle = "rgba(80,80,80,0.8)";
+  ctx.lineWidth = 4;
+
+  // سقف
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.2);
+  ctx.lineTo(canvas.width, canvas.height * 0.2);
+  ctx.stroke();
+
+  // کف
+  ctx.beginPath();
+  ctx.moveTo(0, canvas.height * 0.8);
+  ctx.lineTo(canvas.width, canvas.height * 0.8);
+  ctx.stroke();
+
+  // ستون چپ
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.1, 0);
+  ctx.lineTo(canvas.width * 0.1, canvas.height);
+  ctx.stroke();
+
+  // ستون راست
+  ctx.beginPath();
+  ctx.moveTo(canvas.width * 0.9, 0);
+  ctx.lineTo(canvas.width * 0.9, canvas.height);
+  ctx.stroke();
+
+  // قهرمان (نقطه سبز)
   ctx.fillStyle = "#0f0";
   ctx.beginPath();
   ctx.arc(player.x, player.y, 6, 0, Math.PI * 2);
   ctx.fill();
 
-  // راهنما
+  // متن راهنما
   ctx.fillStyle = "#fff";
   ctx.font = "14px sans-serif";
   ctx.fillText(
-    "کیبورد: W A S D یا جهت‌ها   |   تاچ/کلیک: روی هر نقطه تپ کن تا قهرمان به سمتش حرکت کند",
+    "کیبورد: W A S D یا جهت‌ها   |   تاچ/کلیک: روی نقطه‌ای که می‌خوای برو لمس کن/کلیک کن",
     20,
     30
   );
