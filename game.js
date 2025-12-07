@@ -5,9 +5,13 @@ let target = null;
 let keys = {};
 let lastTime = 0;
 
-// پس‌زمینه مترو
+// پس‌زمینه مترو (همونی که آپلود کردی)
 let bgImg = new Image();
 let bgReady = false;
+
+// پایان مرحله مترو
+let reachedEnd = false;
+let endMessageShown = false;
 
 function startGame(mode) {
   inputMode = mode;
@@ -22,8 +26,8 @@ function startGame(mode) {
 
   setupInput();
 
-  // لود تصویر پس‌زمینه
-  bgImg.src = "assets/images/F318E535-88FD-4E70-A1E8-D8E5BC7C90E8.png"; // اگر اسم دیگری گذاشتی همین‌جا عوض کن
+  // اسم دقیق فایل تصویرت را اینجا گذاشتم
+  bgImg.src = "assets/images/F318E535-88FD-4E70-A1E8-0BE5BC7C90E8.png";
   bgImg.onload = () => {
     bgReady = true;
   };
@@ -40,13 +44,21 @@ function setupInput() {
   // کیبورد
   document.addEventListener("keydown", e => {
     keys[e.key.toLowerCase()] = true;
+
+    // اگر متن پایان مرحله روی صفحه است، با Enter ببندیمش
+    if (reachedEnd && e.key === "Enter") {
+      endMessageShown = false;
+      // اینجا بعداً می‌ریم صحنه بعد (کتاب مادربزرگ)
+      alert("پایان بخش مترو. بعداً وصلش می‌کنیم به صحنه‌ی کتاب.");
+    }
   });
   document.addEventListener("keyup", e => {
     keys[e.key.toLowerCase()] = false;
   });
 
-  // کلیک = حرکت به آن نقطه
+  // کلیک = حرکت به آن نقطه (تا وقتی تو مرحله‌ی مترو هستیم)
   canvas.addEventListener("mousedown", e => {
+    if (reachedEnd) return;
     const rect = canvas.getBoundingClientRect();
     target = {
       x: e.clientX - rect.left,
@@ -58,6 +70,7 @@ function setupInput() {
   canvas.addEventListener(
     "touchend",
     e => {
+      if (reachedEnd) return;
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
       const t = e.changedTouches[0];
@@ -75,7 +88,9 @@ function gameLoop(ts) {
   const dt = (ts - lastTime) / 16.67;
   lastTime = ts;
 
-  update(dt);
+  if (!reachedEnd) {
+    update(dt);
+  }
   draw();
 
   requestAnimationFrame(gameLoop);
@@ -111,8 +126,34 @@ function update(dt) {
   player.x += vx * player.speed * dt;
   player.y += vy * player.speed * dt;
 
+  // محدودیت کلی درون صفحه
   player.x = Math.max(0, Math.min(canvas.width, player.x));
   player.y = Math.max(0, Math.min(canvas.height, player.y));
+
+  // 🔒 ناحیه‌ی قابل حرکت روی «سطح» (با این عکس هماهنگ شده)
+  const walkTop = canvas.height * 0.55;
+  const walkBottom = canvas.height * 0.82;
+  const walkLeft = canvas.width * 0.18;
+  const walkRight = canvas.width * 0.82;
+
+  if (player.y < walkTop) player.y = walkTop;
+  if (player.y > walkBottom) player.y = walkBottom;
+  if (player.x < walkLeft) player.x = walkLeft;
+  if (player.x > walkRight) player.x = walkRight;
+
+  // 🎯 نقطه‌ی پایان مرحله (گوشه راستِ جلو، جایی نزدیک انتهای ریل)
+  const endZoneX = canvas.width * 0.78;
+  const endZoneY = canvas.height * 0.78;
+  const endRadius = 40;
+
+  const dxEnd = player.x - endZoneX;
+  const dyEnd = player.y - endZoneY;
+  const distEnd = Math.hypot(dxEnd, dyEnd);
+
+  if (distEnd < endRadius) {
+    reachedEnd = true;
+    endMessageShown = true;
+  }
 }
 
 function draw() {
@@ -125,7 +166,7 @@ function draw() {
   }
 
   // کمی تاریکی روی کل صحنه
-  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // چراغ‌قوه دور قهرمان
@@ -147,11 +188,21 @@ function draw() {
   ctx.arc(player.x, player.y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // قهرمان
+  // قهرمان (فعلاً نقطه)
   ctx.fillStyle = "#00ff4c";
   ctx.beginPath();
   ctx.arc(player.x, player.y, 6, 0, Math.PI * 2);
   ctx.fill();
+
+  // 🔵 (اختیاری) نمایش ناحیه پایان مرحله برای تست
+  // می‌تونی این قسمت رو بعداً حذف کنی
+  const endZoneX = canvas.width * 0.78;
+  const endZoneY = canvas.height * 0.78;
+  const endRadius = 40;
+  ctx.strokeStyle = "rgba(0,150,255,0.4)";
+  ctx.beginPath();
+  ctx.arc(endZoneX, endZoneY, endRadius, 0, Math.PI * 2);
+  ctx.stroke();
 
   // متن راهنما
   ctx.fillStyle = "#ffffff";
@@ -161,6 +212,36 @@ function draw() {
     20,
     30
   );
+
+  if (endMessageShown) {
+    drawEndMessage();
+  }
 }
-  ctx.fillStyle = "#ff4444";
-  ctx.fillText("BG: " + (bgReady ? "OK" : "NOT LOADED"), 20, 50);
+
+function drawEndMessage() {
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = "rgba(0,0,0,0.8)";
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "20px sans-serif";
+  ctx.textAlign = "center";
+
+  ctx.fillText("همین‌جاست...", w / 2, h / 2 - 40);
+  ctx.font = "16px sans-serif";
+  ctx.fillText(
+    "صدای نفس دیو رو حس می‌کنی، ولی چیزی دیده نمی‌شه.",
+    w / 2,
+    h / 2
+  );
+  ctx.fillText(
+    "یه‌هو یاد شعرهای مادربزرگ می‌افتی...",
+    w / 2,
+    h / 2 + 30
+  );
+  ctx.fillText("برای ادامه، Enter رو بزن (فعلاً فقط پیام تست میاد).", w / 2, h / 2 + 70);
+
+  ctx.textAlign = "left";
+}
