@@ -6,7 +6,7 @@ canvas.height = 675;
 
 /* بک‌گراند */
 const bg = new Image();
-bg.src = "assets/metro-bg.PNG"; // دقیقا همون اسم فایل تو
+bg.src = "assets/images/metro-bg.PNG"; // دقیقا همون اسم فایل تو
 
 /* ناحیه قابل راه رفتن (وسط) */
 const walkZone = {
