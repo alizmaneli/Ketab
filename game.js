@@ -1,13 +1,12 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* رزولوشن واقعی بازی (با CSS فرق داره) */
 canvas.width = 1200;
 canvas.height = 675;
 
 /* بک‌گراند */
 const bg = new Image();
-bg.src = "assets/metro-bg.jpg.PNG"; // دقیقا همون اسم فایل تو
+bg.src = "assets/metro-bg.PNG"; // دقیقا همون اسم فایل تو
 
 /* ناحیه قابل راه رفتن (وسط) */
 const walkZone = {
@@ -29,18 +28,13 @@ const keys = {};
 window.addEventListener("keydown", (e) => (keys[e.key.toLowerCase()] = true));
 window.addEventListener("keyup", (e) => (keys[e.key.toLowerCase()] = false));
 
-function clampToWalkZone(x, y) {
-  const left = walkZone.x;
-  const right = walkZone.x + walkZone.width;
-  const top = walkZone.y;
-  const bottom = walkZone.y + walkZone.height;
+function insideWalkZone(x, y) {
+  const left = walkZone.x + player.r;
+  const right = walkZone.x + walkZone.width - player.r;
+  const top = walkZone.y + player.r;
+  const bottom = walkZone.y + walkZone.height - player.r;
 
-  return (
-    x > left + player.r &&
-    x < right - player.r &&
-    y > top + player.r &&
-    y < bottom - player.r
-  );
+  return x > left && x < right && y > top && y < bottom;
 }
 
 function update() {
@@ -52,8 +46,7 @@ function update() {
   if (keys["a"]) nx -= player.speed;
   if (keys["d"]) nx += player.speed;
 
-  /* فقط داخل مسیر وسط اجازه حرکت بده */
-  if (clampToWalkZone(nx, ny)) {
+  if (insideWalkZone(nx, ny)) {
     player.x = nx;
     player.y = ny;
   }
@@ -62,15 +55,15 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  /* بک‌گراند */
+  // بک‌گراند
   ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
-  /* دیباگ ناحیه راه رفتن (اگر خواستی بعداً خاموشش می‌کنیم) */
+  // خط سبز = محدوده راه رفتن (برای تست)
   ctx.strokeStyle = "rgba(0,255,0,0.25)";
   ctx.lineWidth = 3;
   ctx.strokeRect(walkZone.x, walkZone.y, walkZone.width, walkZone.height);
 
-  /* پلیر */
+  // پلیر
   ctx.fillStyle = "red";
   ctx.beginPath();
   ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
@@ -83,13 +76,11 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* شروع بازی بعد از لود شدن عکس */
 bg.onload = () => loop();
 
-/* اگر عکس لود نشد، خطا رو ببین */
 bg.onerror = () => {
   ctx.fillStyle = "white";
   ctx.font = "20px Arial";
   ctx.fillText("ERROR: Background image not found!", 30, 40);
-  ctx.fillText("Check: assets/metro-bg.jpg.PNG", 30, 70);
+  ctx.fillText("Check: assets/metro-bg.PNG", 30, 70);
 };
